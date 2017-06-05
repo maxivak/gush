@@ -48,7 +48,8 @@ module Gush
         id = SecureRandom.uuid
         job_identifier = "#{job_klass}-#{id}"
         available = connection_pool.with do |redis|
-          !redis.exists("gush.jobs.#{workflow_id}.#{job_identifier}")
+          !redis.exists(build_redis_key("gush.jobs.#{workflow_id}.#{job_identifier}"))
+          #!redis.exists("gush.jobs.#{workflow_id}.#{job_identifier}")
         end
 
         break if available
@@ -62,7 +63,8 @@ module Gush
       loop do
         id = SecureRandom.uuid
         available = connection_pool.with do |redis|
-          !redis.exists("gush.workflow.#{id}")
+          !redis.exists(build_redis_key("gush.workflow.#{id}"))
+          #!redis.exists("gush.workflow.#{id}")
         end
 
         break if available
@@ -73,8 +75,10 @@ module Gush
 
     def all_workflows
       connection_pool.with do |redis|
-        redis.keys("gush.workflows.*").map do |key|
-          id = key.sub("gush.workflows.", "")
+        #redis.keys("gush.workflows.*").map do |key|
+        redis.keys(build_redis_key("gush.workflows.*")).map do |key|
+          #id = key.sub("gush.workflows.", "")
+          id = key.sub(build_redis_key("gush.workflows."), "")
           find_workflow(id)
         end
       end
@@ -82,11 +86,13 @@ module Gush
 
     def find_workflow(id)
       connection_pool.with do |redis|
-        data = redis.get("gush.workflows.#{id}")
+        #data = redis.get("gush.workflows.#{id}")
+        data = redis.get(build_redis_key("gush.workflows.#{id}"))
 
         unless data.nil?
           hash = Gush::JSON.decode(data, symbolize_keys: true)
-          keys = redis.keys("gush.jobs.#{id}.*")
+          #keys = redis.keys("gush.jobs.#{id}.*")
+          keys = redis.keys(build_redis_key("gush.jobs.#{id}.*"))
           nodes = redis.mget(*keys).map { |json| Gush::JSON.decode(json, symbolize_keys: true) }
           workflow_from_hash(hash, nodes)
         else
@@ -97,7 +103,8 @@ module Gush
 
     def persist_workflow(workflow)
       connection_pool.with do |redis|
-        redis.set("gush.workflows.#{workflow.id}", workflow.to_json)
+        #redis.set("gush.workflows.#{workflow.id}", workflow.to_json)
+        redis.set(build_redis_key("gush.workflows.#{workflow.id}"), workflow.to_json)
       end
 
       workflow.jobs.each {|job| persist_job(workflow.id, job) }
@@ -107,7 +114,8 @@ module Gush
 
     def persist_job(workflow_id, job)
       connection_pool.with do |redis|
-        redis.set("gush.jobs.#{workflow_id}.#{job.name}", job.to_json)
+        #redis.set("gush.jobs.#{workflow_id}.#{job.name}", job.to_json)
+        redis.set(build_redis_key("gush.jobs.#{workflow_id}.#{job.name}"), job.to_json)
       end
     end
 
@@ -117,7 +125,8 @@ module Gush
       hypen = '-' if job_name_match.nil?
 
       keys = connection_pool.with do |redis|
-        redis.keys("gush.jobs.#{workflow_id}.#{job_id}#{hypen}*")
+        #redis.keys("gush.jobs.#{workflow_id}.#{job_id}#{hypen}*")
+        redis.keys(build_redis_key("gush.jobs.#{workflow_id}.#{job_id}#{hypen}*"))
       end
 
       return nil if keys.nil?
@@ -134,14 +143,14 @@ module Gush
 
     def destroy_workflow(workflow)
       connection_pool.with do |redis|
-        redis.del("gush.workflows.#{workflow.id}")
+        redis.del(build_redis_key("gush.workflows.#{workflow.id}"))
       end
       workflow.jobs.each {|job| destroy_job(workflow.id, job) }
     end
 
     def destroy_job(workflow_id, job)
       connection_pool.with do |redis|
-        redis.del("gush.jobs.#{workflow_id}.#{job.name}")
+        redis.del(build_redis_key("gush.jobs.#{workflow_id}.#{job.name}"))
       end
     end
 
@@ -181,10 +190,13 @@ module Gush
 
     def report(key, message)
       connection_pool.with do |redis|
-        redis.publish(key, Gush::JSON.encode(message))
+        redis.publish(build_redis_key(key), Gush::JSON.encode(message))
       end
     end
 
+    def build_redis_key(key)
+      configuration.redis_prefix+key
+    end
 
     def build_sidekiq
       Sidekiq::Client.new(connection_pool)

@@ -39,11 +39,13 @@ module Gush
 
   def self.reconfigure_sidekiq
     Sidekiq.configure_server do |config|
-      config.redis = { url: configuration.redis_url, queue: configuration.namespace}
+      #config.redis = { url: configuration.redis_url, queue: configuration.namespace}
+      config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
     end
 
     Sidekiq.configure_client do |config|
-      config.redis = { url: configuration.redis_url, queue: configuration.namespace}
+      #config.redis = { url: configuration.redis_url, queue: configuration.namespace}
+      config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
     end
   end
 end
