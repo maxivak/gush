@@ -38,12 +38,12 @@ module Gush
   end
 
   def self.reconfigure_sidekiq
-    puts "^^^^^^^^ reconfigure_sidekiq ^^^"
+    #puts "^^^^^^^^ reconfigure_sidekiq ^^^"
     Sidekiq.configure_server do |config|
       #config.redis = { url: configuration.redis_url, queue: configuration.namespace}
 
       opts = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
-      puts "sidekiq server opts: #{opts}"
+      #puts "sidekiq server opts: #{opts}"
       config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
     end
 
@@ -51,7 +51,7 @@ module Gush
       #config.redis = { url: configuration.redis_url, queue: configuration.namespace}
 
       opts = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
-      puts "sidekiq client opts: #{opts}"
+      #puts "sidekiq client opts: #{opts}"
 
       config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
     end

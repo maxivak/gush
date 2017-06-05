@@ -200,24 +200,24 @@ module Gush
     end
 
     def build_sidekiq
-      puts "* build sidekiq"
+      #puts "* build sidekiq"
 
       Sidekiq.configure_client do |config|
         config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
       end
 
       Sidekiq::Client.new
+
+      # TODO: use connection pool
       #Sidekiq::Client.new(connection_pool)
 
-      #puts" sidekiq:::: #{Sidekiq::Client.redis.namespace}"
     end
 
     def build_redis
-      #exit 1
-      puts "======== build redis"
+      #puts "======== build redis"
       #exit 1
       opts = {url: configuration.redis_url, namespace: configuration.redis_prefix}
-      puts "redis opts == #{opts}\n\n"
+      #puts "redis opts == #{opts}\n\n"
 
       Redis.new(url: configuration.redis_url, namespace: configuration.redis_prefix)
     end
@@ -225,11 +225,11 @@ module Gush
 
 
     def connection_pool
-      puts "CONN pool ------------: #{@connection_pool}"
+      #puts "CONN pool ------------: #{@connection_pool}"
       if !@connection_pool.nil?
-        puts "-------- pool has smth"
+        #puts "-------- pool has smth"
       else
-        puts "-------- pool is NIL"
+        #puts "-------- pool is NIL"
 
       end
 
