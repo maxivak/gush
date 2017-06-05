@@ -10,6 +10,8 @@ module Gush
     class_option :gushfile, desc: "configuration file to use", aliases: "-f"
     class_option :concurrency, desc: "concurrency setting for Sidekiq", aliases: "-c"
     class_option :redis, desc: "Redis URL to use", aliases: "-r"
+    class_option :redis_prefix, desc: "Redis prefix", aliases: "-redis_prefix"
+    class_option :sidekiq_queue, desc: "Sidekiq queue", aliases: "-sidekiq_queue"
     class_option :namespace, desc: "namespace to run jobs in", aliases: "-n"
     class_option :env, desc: "Sidekiq environment", aliases: "-e"
 
@@ -19,7 +21,11 @@ module Gush
         config.gushfile    = options.fetch("gushfile",    config.gushfile)
         config.concurrency = options.fetch("concurrency", config.concurrency)
         config.redis_url   = options.fetch("redis",       config.redis_url)
-        config.namespace   = options.fetch("namespace",   config.namespace)
+        #config.namespace   = options.fetch("namespace",   config.namespace)
+
+        config.redis_prefix   = options.fetch('redis_prefix', config.redis_prefix)
+        config.sidekiq_queue   = options.fetch('sidekiq_queue', config.sidekiq_queue)
+
         config.environment = options.fetch("environment", config.environment)
       end
       load_gushfile
@@ -54,7 +60,8 @@ module Gush
 
     desc "clear", "Clears all jobs from Sidekiq queue"
     def clear
-      Sidekiq::Queue.new(client.configuration.namespace).clear
+      #Sidekiq::Queue.new(client.configuration.namespace).clear
+      Sidekiq::Queue.new(client.configuration.sidekiq_queue).clear
     end
 
     desc "show [workflow_id]", "Shows details about workflow with given ID"
@@ -92,7 +99,11 @@ module Gush
     desc "workers", "Starts Sidekiq workers"
     def workers
       config = client.configuration
-      Kernel.exec "bundle exec sidekiq -r #{config.gushfile} -c #{config.concurrency} -q #{config.namespace} -e #{config.environment} -v"
+      #puts "****** gush config cli: #{config.to_hash}"
+      cmd = " RUN sidekiq"
+      cmd = "bundle exec sidekiq -r #{config.gushfile} -c #{config.concurrency} -q #{config.sidekiq_queue} -e #{config.environment} -v"
+      puts "#{cmd}"
+      Kernel.exec "bundle exec sidekiq -r #{config.gushfile} -c #{config.concurrency} -q #{config.sidekiq_queue} -e #{config.environment} -v"
     end
 
     desc "viz [WorkflowClass]", "Displays graph, visualising job dependencies"

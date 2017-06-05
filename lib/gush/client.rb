@@ -168,7 +168,8 @@ module Gush
 
       sidekiq.push(
         'class' => Gush::Worker,
-        'queue' => configuration.namespace,
+        #'queue' => configuration.namespace,
+        'queue' => configuration.sidekiq_queue,
         'args'  => [workflow_id, job.name]
       )
     end
@@ -195,19 +196,44 @@ module Gush
     end
 
     def build_redis_key(key)
-      configuration.redis_prefix+key
+      configuration.redis_prefix+":"+key
     end
 
     def build_sidekiq
-      Sidekiq::Client.new(connection_pool)
+      puts "* build sidekiq"
+
+      Sidekiq.configure_client do |config|
+        config.redis = { url: configuration.redis_url, namespace: configuration.redis_prefix, queue: configuration.sidekiq_queue }
+      end
+
+      Sidekiq::Client.new
+      #Sidekiq::Client.new(connection_pool)
+
+      #puts" sidekiq:::: #{Sidekiq::Client.redis.namespace}"
     end
 
     def build_redis
-      Redis.new(url: configuration.redis_url)
+      #exit 1
+      puts "======== build redis"
+      #exit 1
+      opts = {url: configuration.redis_url, namespace: configuration.redis_prefix}
+      puts "redis opts == #{opts}\n\n"
+
+      Redis.new(url: configuration.redis_url, namespace: configuration.redis_prefix)
     end
 
+
+
     def connection_pool
-      @connection_pool ||= ConnectionPool.new(size: configuration.concurrency, timeout: 1) { build_redis }
+      puts "CONN pool ------------: #{@connection_pool}"
+      if !@connection_pool.nil?
+        puts "-------- pool has smth"
+      else
+        puts "-------- pool is NIL"
+
+      end
+
+      @connection_pool ||= ConnectionPool.new(size: configuration.concurrency, timeout: 10) { build_redis }
     end
   end
 end

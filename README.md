@@ -4,6 +4,15 @@
 
 Gush is a parallel workflow runner using only Redis as its message broker and Sidekiq for workers.
 
+
+# New
+
+Options for config:
+* redis_prefix - Redis namespace
+* sidekiq_queue - queue name in Sidekiq
+
+
+ 
 ## Theory
 
 Gush relies on directed acyclic graphs to store dependencies, see [Parallelizing Operations With Dependencies](https://msdn.microsoft.com/en-us/magazine/dd569760.aspx) by Stephen Toub.

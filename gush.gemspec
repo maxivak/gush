@@ -4,9 +4,9 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "gush"
-  spec.version       = "0.4.1"
-  spec.authors       = ["Piotrek Okoński"]
-  spec.email         = ["piotrek@okonski.org"]
+  spec.version       = "0.4.2"
+  spec.authors       = ["Piotrek Okoński", "Max Ivak"]
+  spec.email         = ["piotrek@okonski.org", "maxivak@gmail.com"]
   spec.summary       = "Fast and distributed workflow runner using only Sidekiq and Redis"
   spec.description   = "Gush is a parallel workflow runner using only Redis as its message broker and Sidekiq for workers."
   spec.homepage      = "https://github.com/pokonski/gush"
